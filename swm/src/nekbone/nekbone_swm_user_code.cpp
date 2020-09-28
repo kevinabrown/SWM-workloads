@@ -695,6 +695,8 @@ Err_t NEKBONESWMUserCode::conjugateGradient()
         nek_gsop("on w");
         nek_glsc3();
         nek_glsc3();
+
+	SWM_Mark_Iteration(iter);
     }
 
     return err;

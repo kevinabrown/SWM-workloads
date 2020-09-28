@@ -8,6 +8,9 @@ include_HEADERS = \
 						 src/nearest_neighbor/nearest_neighbor_swm_user_code.h \
 						 src/nearest_neighbor/boost_ptree_array_to_std_vector.h \
 						 src/incast/all_to_one_swm_user_code.h \
+						 src/spread/spread.h \
+						 src/bulk_data/some_to_some_swm_user_code.h \
+						 src/all_reduce/all_reduce.h \
 						 src/milc/milc_swm_user_code.h
 
 src_libswm_la_SOURCES = src/lammps/lammps.cpp	\
@@ -15,6 +18,9 @@ src_libswm_la_SOURCES = src/lammps/lammps.cpp	\
 						src/nekbone/nekbone_swm_user_code.cpp	\
 						src/nearest_neighbor/nearest_neighbor_swm_user_code.cpp \
 						src/incast/all_to_one_swm_user_code.cpp \
+						src/spread/spread.cpp \
+						src/bulk_data/some_to_some_swm_user_code.cpp \
+						src/all_reduce/all_reduce.cpp \
 						src/milc/milc_swm_user_code.cpp
 
 dist_data_DATA = src/lammps/lammps_workload.json \
@@ -24,6 +30,9 @@ dist_data_DATA = src/lammps/lammps_workload.json \
 			  src/incast/incast.json \
 			  src/incast/incast1.json \
 			  src/incast/incast2.json \
+			  src/spread/spread_workload.json \
+			  src/bulk_data/bulk_data_workload.json \
+			  src/all_reduce/all_reduce_workload.json \
 			  src/milc/milc_skeleton.json
 
 

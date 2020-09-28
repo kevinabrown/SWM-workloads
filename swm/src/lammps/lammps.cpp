@@ -295,6 +295,8 @@ LAMMPS_SWM::call()
         SWM_Compute(final_cyc);
         SWM_Allreduce(8, rsp_bytes, SWM_COMM_WORLD, req_vc, resp_vc, NO_BUFFER, NO_BUFFER);  // temperature
         SWM_Allreduce(48, rsp_bytes, SWM_COMM_WORLD, req_vc, resp_vc, NO_BUFFER, NO_BUFFER); // pressure
+
+	SWM_Mark_Iteration(ts);
     }
     SWM_Finalize();
     //MM: comment assert(0);

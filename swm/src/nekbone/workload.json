@@ -21,7 +21,7 @@
                 "Pbegin" : 8,
                 "Pend" : 12,
                 "Pstep" : 3,
-                "CGcount" : 100,
+                "CGcount" : 15,
                 "NeighborCount" : 26,
                 "ByteSizeOf1DOF" : 8,
                 "cpu_freq" : 4e9,

@@ -16,8 +16,8 @@
  * =====================================================================================
  */
 
-#ifndef _ALL_TO_ONE_TEMPLATE_USER_CODE_
-#define _ALL_TO_ONE_TEMPLATE_USER_CODE_
+#ifndef _SOME_TO_SOME_TEMPLATE_USER_CODE_
+#define _SOME_TO_SOME_TEMPLATE_USER_CODE_
 
 #define SWM_APP_TAG_BASE 0
 
@@ -36,12 +36,12 @@
 #include "swm-include.h"
 using namespace std;
 
-class AllToOneSWMUserCode 
+class SomeToSomeSWMUserCode 
 {
 
 public:
 
-    AllToOneSWMUserCode(
+    SomeToSomeSWMUserCode(
 //        SWMUserIF* user_if,
         boost::property_tree::ptree cfg,
         void**& generic_ptrs
@@ -55,7 +55,6 @@ protected:
     uint32_t msg_req_bytes;
     uint32_t msg_rsp_bytes;
     uint32_t pkt_rsp_bytes;
-    uint32_t dst_rank_id;
 
     uint32_t process_id;
     uint32_t process_cnt;
@@ -66,8 +65,10 @@ protected:
     std::vector<uint32_t> req_vcs;
     std::vector<uint32_t> rsp_vcs;
 
-    uint32_t min_source_id;
-    uint32_t max_source_id;
+    uint32_t min_src_id;
+    uint32_t max_src_id;
+    uint32_t min_dst_id;
+    uint32_t max_dst_id;
 
     bool randomize_comm_order;
 

@@ -6,11 +6,15 @@ AllToOneSWMUserCode::AllToOneSWMUserCode(
 ) :
     process_cnt(cfg.get<uint32_t>("jobs.size", 1)),
     dst_rank_id(cfg.get<uint32_t>("jobs.cfg.dst_rank_id",0)),
+    iteration_cnt(cfg.get<uint32_t>("jobs.cfg.iteration_cnt", 1)),
+    msg_req_bytes(cfg.get<uint32_t>("jobs.cfg.msg_req_bytes", 0)),
+    msg_rsp_bytes(cfg.get<uint32_t>("jobs.cfg.msg_rsp_bytes", 0)),
+    compute_delay(cfg.get<uint32_t>("jobs.cfg.compute_delay", 0)),
+    use_any_src(cfg.get<bool>("jobs.cfg.use_any_src", false)),
+    blocking_comm(cfg.get<bool>("jobs.cfg.blocking_comm", false)),
     scattered_start(cfg.get<bool>("jobs.cfg.scattered_start", false)),
     start_delay_max(cfg.get<uint32_t>("jobs.cfg.start_delay_max", 0)),
-    synchronous(cfg.get<bool>("jobs.cfg.synchronous", 0)),
-    use_any_src(cfg.get<bool>("jobs.cfg.use_any_src", 0)),
-    blocking_comm(cfg.get<bool>("jobs.cfg.blocking_comm", 0)),
+    randomize_comm_order(cfg.get<bool>("jobs.cfg.randomize_communication_order", false)),
     debug(cfg.get<bool>("jobs.cfg.debug", false))
 {
 
@@ -28,12 +32,24 @@ AllToOneSWMUserCode::AllToOneSWMUserCode(
     assert(num == 2);
 
     assert(dst_rank_id < process_cnt);
+    process_id = *((int*)generic_ptrs[0]);
 }
 
 void
 AllToOneSWMUserCode::call()
 {
 
+	if(process_id == 0)
+ 	{
+		std::cout << std::endl << "JOB: Incast | size: " << process_cnt;
+		std::cout << " | interation_cnt: " << iteration_cnt;
+		std::cout << " | msg_req_bytes: " << msg_req_bytes;
+		std::cout << " | msg_rsp_bytes: " << msg_rsp_bytes;
+		std::cout << " | dst_rank_id: " << dst_rank_id;
+		std::cout << " | src_rank_id_interval: " << min_source_id << "-" << max_source_id;
+		std::cout << " | scattered_start: " << scattered_start;
+		std::cout << " | compute_delay: " << compute_delay << std::endl;
+	}
   uint32_t *send_handles = NULL;
   uint32_t *recv_handles = NULL;
 
@@ -42,7 +58,7 @@ AllToOneSWMUserCode::call()
 
   //SWMPiggybackBase* dummy_piggyback = nullptr;
 
-  if(synchronous)
+  if(!blocking_comm)
     {
       send_handles = new uint32_t[send_limit * iteration_cnt];
       recv_handles = new uint32_t[recv_limit * iteration_cnt];
@@ -51,6 +67,15 @@ AllToOneSWMUserCode::call()
 
     if ((process_id != dst_rank_id) && (process_id >= min_source_id && process_id <= max_source_id) )   // do not send messages to self
     {
+            // if we want to scatter the start time, we mimic this delay with a compute delay
+            if(scattered_start)
+              {
+                assert(start_delay_max > 0);
+		/* TODO: Use a better random number generator here. */
+                uint32_t start_delay = rand() % start_delay_max;
+                std::cout << std::endl << "process_id: " << process_id << " delay start by " << start_delay << " cycles";
+                SWM_Compute(start_delay);
+              }
 
         for(uint32_t iter=0; iter < iteration_cnt; iter++)
         {
@@ -59,15 +84,6 @@ AllToOneSWMUserCode::call()
 
             //GetMsgDetails(&msg_desc);
 
-            // if we want to scatter the start time, we mimic this delay with a compute delay
-            if(scattered_start)
-              {
-                assert(start_delay_max > 0);
-		/* TODO: Use a better random number generator here. */
-                uint32_t start_delay = rand() % start_delay_max;
-                std::cout << "process_id: " << process_id << " delay start by " << start_delay << " cycles" << std::endl;
-                SWM_Compute(start_delay);
-              }
 
             /*if(!synchronous)
               {
@@ -118,8 +134,8 @@ AllToOneSWMUserCode::call()
 			      -1, 
 			      -1,
                               NO_BUFFER,
-			      0, 
-			      0,
+			      msg_req_bytes, 
+			      msg_rsp_bytes,
                               &(send_handles[send_count]),
                               0,
                               0
@@ -134,8 +150,8 @@ AllToOneSWMUserCode::call()
 			     -1,// req-vc
 			     -1, //resp-vc
                              NO_BUFFER,
-                             0, //req-bytes
-                             0, //resp-bytes
+                             msg_req_bytes, //req-bytes
+                             msg_rsp_bytes, //resp-bytes
                              0,//routing type
                              0 //routing type
                              );
@@ -148,7 +164,7 @@ AllToOneSWMUserCode::call()
 
                 if(debug)
                   {
-                    std::cout << "process_id: " << process_id << " sent message to destination: " << dst_rank_id << ", tag: " << this_tag << ", iter: " << iter  << std::endl;
+                    std::cout << std::endl << "process_id: " << process_id << " sent message to destination: " << dst_rank_id << ", tag: " << this_tag << ", iter: " << iter ;
                   }
 
               //} // else(synchronous) 
@@ -160,9 +176,10 @@ AllToOneSWMUserCode::call()
             if (compute_delay)
                 SWM_Compute(compute_delay);
 
+	    SWM_Mark_Iteration(iter);
         } // end-for(iteration_cnt)
     }
-    else if(synchronous && (process_id == dst_rank_id) )
+    else if(process_id == dst_rank_id)
       {
 
         // need to receive from everybody every iteration...
@@ -182,7 +199,7 @@ AllToOneSWMUserCode::call()
                 
                 if(debug)
                   {
-                    std::cout << "process_id: " << process_id << " expecting to recv data from: " << receive_from_proc << " with recv tag: " << this_tag << " | iter_" << iter << std::endl;
+                    std::cout  << std::endl << "process_id: " << process_id << " expecting to recv data from: " << receive_from_proc << " with recv tag: " << this_tag << " | iter_" << iter;
                   }
                 
 
@@ -208,7 +225,7 @@ AllToOneSWMUserCode::call()
 
                 if(debug)
                   {
-                    std::cout << "process_id: " << process_id << " received data from src: " << index << ", iteration: " << iter  << std::endl;
+                    std::cout << std::endl << "process_id: " << process_id << " received data from src: " << index << ", iteration: " << iter ;
                   }
 
               } // end of for-loop(all_sources)
@@ -218,6 +235,7 @@ AllToOneSWMUserCode::call()
                 SWM_Waitall(recv_limit, recv_handles);
               }
 
+	    SWM_Mark_Iteration(iter);
           } // end for-loop(iteration_cnt)
 
       } // end of else if(synchronous && (process_id == dst_rank_id) )
