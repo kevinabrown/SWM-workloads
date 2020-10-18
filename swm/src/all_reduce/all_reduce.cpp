@@ -35,11 +35,11 @@ AllReduceSWMUserCode::call()
 	if (compute_delay)
 		SWM_Compute(compute_delay);
 
-	if(process_id == 0)
-	{
+	//if(process_id == 0)
+	//{
     		SWM_Mark_Iteration(tag);
 		tag = tag +1;
-	}
+	//}
 
 	SWM_Allreduce(
 		msg_req_bytes, // payload
@@ -50,11 +50,11 @@ AllReduceSWMUserCode::call()
 		NO_BUFFER,
 		NO_BUFFER);
 
-	if(process_id == 0)
-	{
+	//if(process_id == 0)
+	//{
     		SWM_Mark_Iteration(tag);        
 		tag = tag +1;
-	}
+	//}
     }
 
 

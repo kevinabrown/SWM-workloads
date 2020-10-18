@@ -75,6 +75,9 @@ protected:
     // are we staggering the start time of the srcs
     bool scattered_start;
 
+    // one-to-one pairs between sender and recv?
+    bool fixed_pairs;
+
     // if using staggered start delay, this is the max used in the RNG when computing delay
     uint32_t start_delay_max;
 

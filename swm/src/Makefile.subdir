@@ -24,15 +24,20 @@ src_libswm_la_SOURCES = src/lammps/lammps.cpp	\
 						src/milc/milc_swm_user_code.cpp
 
 dist_data_DATA = src/lammps/lammps_workload.json \
+			  src/lammps/lammps_workload1.json \
 			  src/nearest_neighbor/skeleton.json \
 			  src/nekbone/workload.json \
+			  src/nekbone/workload1.json \
 			  src/point_to_point/example.json \
 			  src/incast/incast.json \
 			  src/incast/incast1.json \
 			  src/incast/incast2.json \
 			  src/spread/spread_workload.json \
 			  src/bulk_data/bulk_data_workload.json \
+			  src/bulk_data/bulk_data_workload1.json \
 			  src/all_reduce/all_reduce_workload.json \
+			  src/all_reduce/all_reduce32_workload.json \
+			  src/all_reduce/all_reduce256_workload.json \
 			  src/milc/milc_skeleton.json
 
 

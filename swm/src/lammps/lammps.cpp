@@ -128,7 +128,7 @@ LAMMPS_SWM::doP2P(int len, int *r_targets, int *s_targets, int *s_sizes, long *c
     uint32_t h = 0;
     for(i = 0; i < len; i++)
     {
-        SWM_Compute(cyc_cnt[i]);
+        //SWM_Compute(cyc_cnt[i]);	#KB
         SWM_Irecv(r_targets[i], SWM_COMM_WORLD, 0, NO_BUFFER, &h);
         SWM_Send(s_targets[i], SWM_COMM_WORLD, 0, req_vc, resp_vc, NO_BUFFER, s_sizes[i]);
         //printf("S @ %d: i %d: %d -> %d\n", process_id, i, process_id, s_targets[i]);
@@ -147,7 +147,7 @@ LAMMPS_SWM::doNeighExch()
     // neighbor exchange
     while(i < neigh_e_len)
     {
-        SWM_Compute(neigh_e_cyc[i]);
+        //SWM_Compute(neigh_e_cyc[i]);	#KB
         SWM_Sendrecv(SWM_COMM_WORLD, neigh_e_r_targets[i], 0, req_vc, resp_vc, NO_BUFFER, 4, rsp_bytes, neigh_e_s_targets[i], 0, NO_BUFFER);
         if(neigh_e_r_targets[i] != neigh_e_s_targets[i])
         {
@@ -169,7 +169,7 @@ LAMMPS_SWM::doNeighExch()
     // neighbor borders
     for(i = 0; i < neigh_b_len; i++)
     {
-        SWM_Compute(neigh_b_cyc[i]);
+        //SWM_Compute(neigh_b_cyc[i]);	#KB
         SWM_Sendrecv(SWM_COMM_WORLD, neigh_b_r_targets[i], 0, req_vc, resp_vc, NO_BUFFER, 4, rsp_bytes, neigh_b_s_targets[i], 0, NO_BUFFER);
         SWM_Irecv(neigh_b_r_targets[i], SWM_COMM_WORLD, 0, NO_BUFFER, &h);
         SWM_Send(neigh_b_s_targets[i], SWM_COMM_WORLD, 0, req_vc, resp_vc, NO_BUFFER, neigh_b_s_sizes[i]);
@@ -179,7 +179,7 @@ LAMMPS_SWM::doNeighExch()
     // allreduces
     for(i = 0; i < NUM_NEIGH_ALLREDUCE; i++)
     {
-        SWM_Compute(neigh_end_cyc[i]);
+        //SWM_Compute(neigh_end_cyc[i]);	#KB
         SWM_Allreduce(4, rsp_bytes, SWM_COMM_WORLD, req_vc, resp_vc, NO_BUFFER, NO_BUFFER);
     }
 }
@@ -195,7 +195,7 @@ LAMMPS_SWM::doFFT()
 
         h = new uint32_t[k_len[idx]];
 
-        SWM_Compute(k_cyc[idx]);
+        //SWM_Compute(k_cyc[idx]);	#KB
         for(i = 0; i < k_len[idx]; i++)
         {
             SWM_Irecv(k_r_targets[idx][i], SWM_COMM_WORLD, 0, NO_BUFFER, &h[i]);
@@ -228,7 +228,7 @@ LAMMPS_SWM::neigh_check()
         }
         else
         {
-            SWM_Compute(neigh_check_cyc);
+            //SWM_Compute(neigh_check_cyc);	#KB
             SWM_Allreduce(4, rsp_bytes, SWM_COMM_WORLD, req_vc, resp_vc, NO_BUFFER, NO_BUFFER);
 
             neigh_check_cumulative += neigh_check_average;
@@ -256,7 +256,7 @@ LAMMPS_SWM::call()
     for(ts = 0; ts < num_timesteps; ts++)
     {
         // initial integration
-        SWM_Compute(start_cyc);
+        //SWM_Compute(start_cyc);	#KB
         SWM_Allreduce(48, rsp_bytes, SWM_COMM_WORLD, req_vc, resp_vc, NO_BUFFER, NO_BUFFER); // temperature
         SWM_Allreduce(48, rsp_bytes, SWM_COMM_WORLD, req_vc, resp_vc, NO_BUFFER, NO_BUFFER); // pressure
 
@@ -282,7 +282,7 @@ LAMMPS_SWM::call()
         doP2P(k_post_len, k_post_r_targets, k_post_s_targets, k_post_s_sizes, k_post_cyc);
 
         // energy calculation
-        SWM_Compute(k_energy_cyc);
+        //SWM_Compute(k_energy_cyc);	#KB
         SWM_Allreduce(48, rsp_bytes, SWM_COMM_WORLD, req_vc, resp_vc, NO_BUFFER, NO_BUFFER);
 
         // ghost reverse exchange
@@ -292,7 +292,7 @@ LAMMPS_SWM::call()
         doP2P(fix_len, fix_r_targets, fix_s_targets, fix_s_sizes, fix_cyc);
 
         // final integration
-        SWM_Compute(final_cyc);
+        //SWM_Compute(final_cyc);	#KB
         SWM_Allreduce(8, rsp_bytes, SWM_COMM_WORLD, req_vc, resp_vc, NO_BUFFER, NO_BUFFER);  // temperature
         SWM_Allreduce(48, rsp_bytes, SWM_COMM_WORLD, req_vc, resp_vc, NO_BUFFER, NO_BUFFER); // pressure
 

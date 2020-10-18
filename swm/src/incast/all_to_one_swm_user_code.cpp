@@ -76,45 +76,15 @@ AllToOneSWMUserCode::call()
                 std::cout << std::endl << "process_id: " << process_id << " delay start by " << start_delay << " cycles";
                 SWM_Compute(start_delay);
               }
-
+	uint32_t marker = 0;
         for(uint32_t iter=0; iter < iteration_cnt; iter++)
         {
-
-            //msg_traffic_desc msg_desc;
-
-            //GetMsgDetails(&msg_desc);
+            if (compute_delay)
+                SWM_Compute(compute_delay);
 
 
-            /*if(!synchronous)
-              {
-
-                SWM_Synthetic(
-                              dst_rank_id,  //dst
-                              msg_desc.msg_req_vc,
-                              msg_desc.msg_rsp_vc,
-                              msg_desc.pkt_rsp_vc,
-                              msg_desc.msg_req_bytes,
-                              msg_desc.msg_rsp_bytes,
-                              msg_desc.pkt_rsp_bytes,
-                              msg_desc.msg_req_routing_type,
-                              msg_desc.msg_rsp_routing_type,
-                              msg_desc.pkt_rsp_routing_type,
-                              dummy_piggyback, //NULL,
-                              msg_desc.attribute
-#ifdef FABSIM_EMULATION
-                              , msg_desc.l2_encoding
-#endif
-                              );
-
-
-                if(debug)
-                  {
-                    std::cout << "process_id: " << process_id << " sent synthetic message to destination: " << dst_rank_id << ", iter: " << iter << " @ "  << SWM_Clock() << std::endl;
-                  }
-
-              }
-            else
-              {*/
+	    SWM_Mark_Iteration(marker);
+	    marker++;
                 
                 //uint32_t process_id_offset = ( (process_id + 1) << 32);
                 //uint32_t iter_offset       = ( (iter + 1) << 8);
@@ -173,10 +143,8 @@ AllToOneSWMUserCode::call()
             {
                 SWM_Noop();
             }*/
-            if (compute_delay)
-                SWM_Compute(compute_delay);
-
-	    SWM_Mark_Iteration(iter);
+	    SWM_Mark_Iteration(marker);
+	    marker++;
         } // end-for(iteration_cnt)
     }
     else if(process_id == dst_rank_id)
@@ -235,7 +203,7 @@ AllToOneSWMUserCode::call()
                 SWM_Waitall(recv_limit, recv_handles);
               }
 
-	    SWM_Mark_Iteration(iter);
+	    //SWM_Mark_Iteration(iter);
           } // end for-loop(iteration_cnt)
 
       } // end of else if(synchronous && (process_id == dst_rank_id) )

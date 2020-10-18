@@ -1,0 +1,9 @@
+src/nekbone/cubiclattice.lo: src/nekbone/cubiclattice.cpp \
+ /usr/include/stdc-predef.h src/nekbone/cubiclattice.h \
+ src/nekbone/triplet.h
+
+/usr/include/stdc-predef.h:
+
+src/nekbone/cubiclattice.h:
+
+src/nekbone/triplet.h:

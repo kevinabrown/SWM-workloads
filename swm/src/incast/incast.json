@@ -4,8 +4,8 @@
         "size": 512,
         "cfg": {
             "app": "incast",
-            "iteration_cnt": 2000,
-            "compute_delay": 1000,
+            "iteration_cnt": 500,
+            "compute_delay": 40000,
             "msg_req_bytes": 160,
             "msg_rsp_bytes": 0,
             "start_delay_max" : 10000,

@@ -12,6 +12,7 @@ SomeToSomeSWMUserCode::SomeToSomeSWMUserCode(
     use_any_src(cfg.get<bool>("jobs.cfg.use_any_src", false)),
     blocking_comm(cfg.get<bool>("jobs.cfg.blocking_comm", false)),
     scattered_start(cfg.get<bool>("jobs.cfg.scattered_start", false)),
+    fixed_pairs(cfg.get<bool>("jobs.cfg.fixed_pairs", false)),
     start_delay_max(cfg.get<uint32_t>("jobs.cfg.start_delay_max", 0)),
     randomize_comm_order(cfg.get<bool>("jobs.cfg.randomize_communication_order", false)),
     debug(cfg.get<bool>("jobs.cfg.debug", false))
@@ -71,6 +72,12 @@ SomeToSomeSWMUserCode::call()
 
   uint32_t send_limit = (max_dst_id - min_dst_id) + 1;
   uint32_t recv_limit = (max_src_id - min_src_id) + 1;
+  
+  if (fixed_pairs)
+  {
+	  send_limit = 1;
+	  recv_limit = 1;
+  }
 
   //SWMPiggybackBase* dummy_piggyback = nullptr;
 
@@ -97,10 +104,25 @@ SomeToSomeSWMUserCode::call()
                 	SWM_Compute(compute_delay);
 
 
-	    SWM_Mark_Iteration(marker);
-	    marker++;
+//	    SWM_Mark_Iteration(marker);
+//	    marker++;
 		uint32_t send_count = 0;
-		uint32_t curr_target = (process_id % send_limit) + min_dst_id;
+
+		uint32_t curr_target;
+	       if (fixed_pairs)
+	       {
+			curr_target = (process_id - min_src_id) + min_dst_id;
+	       }
+	       else
+	       {
+			curr_target = (process_id % send_limit) + min_dst_id;
+	       }
+	       if (curr_target > max_dst_id)
+	       {
+			std::cout << std::endl << "process_id: " << process_id << " - unused source. stopping.";
+		       return;
+	       }
+
 		for(uint32_t sent=0; sent < send_limit; sent++, send_count++)
                 {
 			//uint32_t process_id_offset = ( (process_id + 1) << 32);
@@ -148,11 +170,15 @@ SomeToSomeSWMUserCode::call()
 			  {
 			    std::cout << std::endl << "process_id: " << process_id << " sent message to destination: " << curr_target << ", tag: " << this_tag << ", iter: " << iter ;
 			  }
-			curr_target++;
-			if (curr_target > max_dst_id)
-			{
-				curr_target = min_dst_id;
-			}
+			
+		       if (!fixed_pairs)
+		       {
+				curr_target++;
+				if (curr_target > max_dst_id)
+				{
+					curr_target = min_dst_id;
+				}
+		       }
 		}
 
                 //if(!blocking_comm)
@@ -173,8 +199,17 @@ SomeToSomeSWMUserCode::call()
     }
 	else if (process_id >= min_dst_id && process_id <= max_dst_id) // to the recievers
       {
-
 	 uint32_t     receive_from_proc =  -1;
+
+       if (fixed_pairs)
+       {
+		min_src_id = (process_id - min_dst_id) + min_src_id;
+		if(min_src_id > max_src_id){
+			std::cout << std::endl << "process_id: " << process_id << " - unused destination. stopping.";
+			return;
+		}
+		max_src_id = min_src_id;
+       }
         // need to receive from everybody every iteration...
         for(uint32_t iter = 0; iter < iteration_cnt; iter++)
           {
@@ -193,14 +228,14 @@ SomeToSomeSWMUserCode::call()
                 
                 if(debug)
                   {
-                    std::cout  << std::endl << "process_id: " << process_id << " expecting to recv data from: " << receive_from_proc << " with recv tag: " << this_tag << " | iter_" << iter;
+                    std::cout  << std::endl << "process_id: " << process_id << " expecting to recv data from: " << index  << " with recv tag: " << this_tag << " | iter_" << iter;
                   }
                 
 
                 //if(!blocking_comm)
                 // {
                     SWM_Irecv(
-                              receive_from_proc,
+                              index,
                               SWM_COMM_WORLD,
                               this_tag,
                               NO_BUFFER,
@@ -217,10 +252,6 @@ SomeToSomeSWMUserCode::call()
                              );
                   }
 		*/
-                if(debug)
-                  {
-                    std::cout << std::endl << "process_id: " << process_id << " received data from src: " << index << ", iteration: " << iter ;
-                  }
 
               } // end of for-loop(all_sources)
         
@@ -228,8 +259,12 @@ SomeToSomeSWMUserCode::call()
             //  {
                 SWM_Waitall(recv_limit, recv_handles);
              // }
+                if(debug)
+                  {
+                    std::cout << std::endl << "process_id: " << process_id << " received all data. iteration: " << iter ;
+                  }
 
-	    SWM_Mark_Iteration(iter);
+	    //SWM_Mark_Iteration(iter);
           } // end for-loop(iteration_cnt)
 
       } // end of else if(synchronous && (process_id == dst_rank_id) )
